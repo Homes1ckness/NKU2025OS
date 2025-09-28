@@ -8,8 +8,8 @@
 #include <sbi.h>
 #include <stdio.h>
 #include <string.h>
-#include <../sync/sync.h>
 #include <riscv.h>
+#include <dtb.h>
 
 // virtual address of physical page array
 struct Page *pages;
@@ -47,45 +47,29 @@ static void init_memmap(struct Page *base, size_t n) {
 // alloc_pages - call pmm->alloc_pages to allocate a continuous n*PAGESIZE
 // memory
 struct Page *alloc_pages(size_t n) {
-    struct Page *page = NULL;
-    bool intr_flag;
-    local_intr_save(intr_flag);
-    {
-        page = pmm_manager->alloc_pages(n);
-    }
-    local_intr_restore(intr_flag);
-    return page;
+    return pmm_manager->alloc_pages(n);
 }
 
 // free_pages - call pmm->free_pages to free a continuous n*PAGESIZE memory
 void free_pages(struct Page *base, size_t n) {
-    bool intr_flag;
-    local_intr_save(intr_flag);
-    {
-        pmm_manager->free_pages(base, n);
-    }
-    local_intr_restore(intr_flag);
+    pmm_manager->free_pages(base, n);
 }
 
 // nr_free_pages - call pmm->nr_free_pages to get the size (nr*PAGESIZE)
 // of current free memory
 size_t nr_free_pages(void) {
-    size_t ret;
-    bool intr_flag;
-    local_intr_save(intr_flag);
-    {
-        ret = pmm_manager->nr_free_pages();
-    }
-    local_intr_restore(intr_flag);
-    return ret;
+    return pmm_manager->nr_free_pages();
 }
 
 static void page_init(void) {
     va_pa_offset = PHYSICAL_MEMORY_OFFSET;
 
-    uint64_t mem_begin = KERNEL_BEGIN_PADDR;
-    uint64_t mem_size = PHYSICAL_MEMORY_END - KERNEL_BEGIN_PADDR;
-    uint64_t mem_end = PHYSICAL_MEMORY_END; //硬编码取代 sbi_query_memory()接口
+    uint64_t mem_begin = get_memory_base();
+    uint64_t mem_size  = get_memory_size();
+    if (mem_size == 0) {
+        panic("DTB memory info not available");
+    }
+    uint64_t mem_end   = mem_begin + mem_size;
 
     cprintf("physcial memory map:\n");
     cprintf("  memory: 0x%016lx, [0x%016lx, 0x%016lx].\n", mem_size, mem_begin,

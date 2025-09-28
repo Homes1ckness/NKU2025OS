@@ -1,7 +1,5 @@
 #include <defs.h>
 #include <stdio.h>
-#include <intr.h>
-#include <kmonitor.h>
 
 static bool is_panic = 0;
 
@@ -25,9 +23,8 @@ __panic(const char *file, int line, const char *fmt, ...) {
     va_end(ap);
 
 panic_dead:
-    intr_disable();
     while (1) {
-        kmonitor(NULL);
+        ;
     }
 }
 

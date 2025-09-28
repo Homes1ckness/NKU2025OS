@@ -2,7 +2,6 @@
 #define __KERN_MM_PMM_H__
 
 #include <assert.h>
-#include <atomic.h>
 #include <defs.h>
 #include <memlayout.h>
 #include <mmu.h>
