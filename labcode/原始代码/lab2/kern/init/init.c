@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dtb.h>
+#include <slub.h>
 
 int kern_init(void) __attribute__((noreturn));
 void grade_backtrace(void);
@@ -14,7 +15,8 @@ void print_kerninfo(void);
  * of kernel entry, the start addresses of data and text segements, the start
  * address of free memory and how many memory that kernel has used.
  * */
-void print_kerninfo(void) {
+void print_kerninfo(void)
+{
     extern char etext[], edata[], end[];
     cprintf("Special kernel symbols:\n");
     cprintf("  entry  0x%016lx (virtual)\n", (uintptr_t)kern_init);
@@ -22,25 +24,27 @@ void print_kerninfo(void) {
     cprintf("  edata  0x%016lx (virtual)\n", edata);
     cprintf("  end    0x%016lx (virtual)\n", end);
     cprintf("Kernel executable memory footprint: %dKB\n",
-            (end - (char*)kern_init + 1023) / 1024);
+            (end - (char *)kern_init + 1023) / 1024);
 }
 
-int kern_init(void) {
+int kern_init(void)
+{
     extern char edata[], end[];
     memset(edata, 0, end - edata);
     dtb_init();
-    cons_init();  // init the console
+    cons_init(); // init the console
     const char *message = "(THU.CST) os is loading ...\0";
-    //cprintf("%s\n\n", message);
+    // cprintf("%s\n\n", message);
     cputs(message);
 
     print_kerninfo();
 
     // grade_backtrace();
-    pmm_init();  // init physical memory management
+    pmm_init(); // init physical memory management
 
+    slub_init();  // 初始化SLUB
+    slub_check(); // 测试SLUB
     /* do nothing */
     while (1)
         ;
 }
-
