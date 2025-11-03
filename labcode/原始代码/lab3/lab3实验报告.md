@@ -89,7 +89,7 @@ intr_enable()                    // 全局使能中断 (设置 sstatus.SIE)
 
 #### 1.3.2 中断处理流程
 
-![trap_flow](.\img\trap_flow.png)
+![trap_flow](img/trap_flow.png)
 
 #### 1.3.3 关键寄存器说明
 
@@ -516,7 +516,7 @@ case CAUSE_BREAKPOINT:
 
 修复压缩指令问题后，编译并运行，输出结果如图：
 
-<img src=".\img\image-20251028202649932.png" alt="image-20251028202649932" style="zoom: 67%;" />
+<img src="/img/image-20251028202649932.png" alt="image-20251028202649932" style="zoom: 67%;" />
 
 ```
 Testing breakpoint exception...
