@@ -37,7 +37,7 @@ int kern_init(void)
     clock_init();  // init clock interrupt
     intr_enable(); // enable irq interrupt
 
-    // LAB3 CHALLENGE3: 测试异常处理（取消注释以测试）
+    // LAB3 CHALLENGE3: 测试异常处理
     test_exceptions();
 
     /* do nothing */
