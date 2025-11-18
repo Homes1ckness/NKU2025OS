@@ -1,0 +1,20 @@
+# 忽略 Windows 的 Zone.Identifier 文件/流
+**/*Zone.Identifier
+**/*Zone.Identifier"
+**/*:\357\200\272Zone.Identifier"
+
+# 忽略临时构建文件和日志文件
+*.out
+*.o
+*.a
+*.bin
+*.img
+*.d
+*~
+lab3/bin/
+lab3/obj/
+lab4/bin/
+lab4/obj/
+# 以及其他您不希望跟踪的输出文件
+lab3/.gdb.in
+lab3/.qemu.out
