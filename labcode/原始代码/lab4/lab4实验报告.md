@@ -307,7 +307,7 @@ make qemu
 
 **输出结果：**
 
-![qemu](.\img\qemu.png)
+![qemu](./img/qemu.png)
 
 与预期结果一致，说明实现正确
 
@@ -315,7 +315,7 @@ make qemu
 
 在该实验根目录下运行**make grade**命令得到如下结果：
 
-![grade](.\img\grade.png)
+![grade](./img/grade.png)
 
 说明通过相应测试
 
@@ -634,4 +634,5 @@ return &((pte_t *)KADDR(PDE_ADDR(*pdep0)))[PTX(la)];
 3. **进程同步原语** - 无信号量、互斥锁、条件变量等
 4. **进程间通信(IPC)** - 无管道、消息队列、共享内存等机制
 5. **系统调用接口** - 无fork()、exec()、exit()、wait()等系统调用
+
 6. **多处理器支持** - 仅支持单CPU，无SMP相关机制
