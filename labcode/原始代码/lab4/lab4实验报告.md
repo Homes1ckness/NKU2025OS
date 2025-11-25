@@ -1,4 +1,8 @@
-# lab4 实验报告
+# <center>lab4 实验报告</center>
+
+<center>2310364 柳昕彤   2313310 熊诚义  2311887 陈语童</center>
+
+[toc]
 
 ## **实验概述**
 
@@ -22,6 +26,7 @@ alloc_proc(void)
     struct proc_struct *proc = kmalloc(sizeof(struct proc_struct));
     if (proc != NULL)
     {
+        // LAB4:EXERCISE1 2313310
         proc->state = PROC_UNINIT;                      // 设置进程为未初始化状态
         proc->pid = -1;                                 // 未初始化的进程ID
         proc->runs = 0;                                 // 初始化运行次数为0
@@ -29,11 +34,11 @@ alloc_proc(void)
         proc->need_resched = 0;                         // 不需要调度
         proc->parent = NULL;                            // 没有父进程
         proc->mm = NULL;                                // 未分配内存管理结构
-        memset(&(proc->context), 0, sizeof(struct context)); // 初始化上下文，context 成员用于保存切换时的寄存器信息
-        proc->tf = NULL;                                // 中断帧指针初始化为NULL，尚未发生过中断/异常
-        proc->pgdir = boot_pgdir_pa;                    // 使用内核页目录表物理地址（线程共享）
+        memset(&(proc->context), 0, sizeof(struct context)); // 初始化上下文
+        proc->tf = NULL;                                // 中断帧指针初始化为NULL
+        proc->pgdir = boot_pgdir_pa;                    // 使用内核页目录表
         proc->flags = 0;                                // 初始化标志位为0
-        memset(proc->name, 0, PROC_NAME_LEN + 1);       // 初始化进程名0
+        memset(proc->name, 0, PROC_NAME_LEN + 1);       // 初始化进程名
     }
     return proc;
 }
@@ -55,17 +60,90 @@ alloc_proc 的职责是从内核堆中分配一段用于保存进程控制块（
 
 ### 问题：proc_struct 中 `struct context context` 与 `struct trapframe *tf` 的含义和本实验中的作用：
 
-`struct context context`：
+### struct context context：
 
 `struct context` 结构体用于保存进程在**内核态上下文切换**时需要保存的寄存器集合，通常是那些**调用者保存 (Caller-saved)** 和**被调用者保存 (Callee-saved)** 的寄存器，以及返回地址 `ra` 和栈指针 `sp`。本实验中它用于 `switch_to()` 函数进行**上下文切换**。当调用 `switch_to(&prev->context, &next->context)` 时，CPU 的状态会被保存到 `prev->context` 中，然后从 `next->context` 中恢复状态。在新线程创建时 (`copy_thread`)，它的 `ra` 和 `sp` 会被特殊设置，确保新线程在被切换运行时，能从正确的入口函数 (`forkret`) 开始执行。
 
-`struct trapframe *tf`：
+### **struct trapframe *tf：**
 
 中断帧用于保存**完整的 CPU 状态**（包括所有通用寄存器、程序计数器 `epc`、状态寄存器 `status` 等）。它是在**中断、异常或系统调用**发生时，CPU 硬件或汇编代码自动/手动将所有寄存器状态保存到栈上所形成的结构。本实验在 `copy_thread` 中，会在新线程的内核栈顶**伪造**一个 `trapframe` 结构，并让 `proc->tf` 指向它。这个伪造的 `trapframe` 包含了新线程**开始执行时的初始寄存器状态**。当新线程第一次被调度运行时，它最终会从这个 `trapframe` 恢复寄存器并开始执行。 `fork` 机制中，它还用于设置子进程的**返回值**（例如 `a0` 寄存器设置为 0)。
 
+在 lab3 中我们已经实现了低层的中断/异常保存与恢复机制，lab4 直接沿用了该设计并在进程创建与调度中利用了同样的中断帧布局。汇编在发生异常/中断时把 CPU 的全部寄存器和 CSR（如 `sstatus`、`sepc`、`sbadvaddr`、`scause`）按固定顺序压入内核栈，形成一个 `struct trapframe` 布局；内核 C 通过接收这个 `struct trapframe *` 来查看、修改寄存器状态并决定如何返回或调度：
+
+```c
+struct trapframe
+{
+    struct pushregs gpr;
+    uintptr_t status;
+    uintptr_t epc;
+    uintptr_t badvaddr;
+    uintptr_t cause;
+};
+```
+
+在汇编端，`kern/trap/trapentry.S` 提供了保存和恢复的宏，并把栈指针作为 `trap` 的参数传入 C 函数：
+
+```asm
+    SAVE_ALL
+
+    move  a0, sp
+    jal trap
+    # sp should be the same as before "jal trap"
+```
+
+上述代码把异常时的寄存器按 `trapframe` 布局保存到栈上，然后把栈指针（`struct trapframe *`）传给 `trap()`。因此 C 侧拿到的 `tf` 指向的是刚由汇编保存的中断帧，内核可以直接读写 `tf->gpr`、`tf->epc`、`tf->status` 等字段来实现异常处理或返回控制流的调整。
+
+在 C 侧，`kern/trap/trap.c` 中的 `trap` 会根据 `tf->cause` 分流到中断或异常处理函数：
+
+```c
+void trap(struct trapframe *tf)
+{
+    trap_dispatch(tf);
+}
+
+static inline void trap_dispatch(struct trapframe *tf)
+{
+    if ((intptr_t)tf->cause < 0)
+        interrupt_handler(tf);
+    else
+        exception_handler(tf);
+}
+```
+
+在进程创建路径上，我们的lab4实验 利用了相同的 `trapframe` 布局来“伪造”一个初始的中断帧，使新进程能够通过汇编的恢复路径直接启动。`kern/process/proc.c` 的 `copy_thread` 会把传入的 `struct trapframe` 拷贝到子进程的内核栈顶并设置 `proc->tf`：
+
+```c
+proc->tf = (struct trapframe *)(proc->kstack + KSTACKSIZE - sizeof(struct trapframe));
+*(proc->tf) = *tf;
+proc->tf->gpr.a0 = 0; // 子进程 fork 返回值为 0
+proc->tf->gpr.sp = (esp == 0) ? (uintptr_t)proc->tf : esp;
+proc->context.ra = (uintptr_t)forkret;
+proc->context.sp = (uintptr_t)(proc->tf);
+```
+
+当新进程第一次被调度时，`switch_to` 恢复的 `context` 会使执行流进入 `forkret`，`forkret` 调用 `forkrets(current->tf)`：
+
+```c
+static void forkret(void)
+{
+    forkrets(current->tf);
+}
+```
+
+而 `forkrets` 在 `trapentry.S` 中把传入的 `proc->tf` 设为栈指针并跳转到 `__trapret` 恢复寄存器并执行 `sret`：
+
+```asm
+.globl forkrets
+forkrets:
+    move sp, a0
+    j __trapret
+```
+
+我们的lab3实验中的 的汇编保存/恢复约定（`SAVE_ALL`/`RESTORE_ALL`、`__alltraps`、`__trapret`）与 lab4实验的进程初始化（`copy_thread`、`forkret`、`forkrets`）组合，使得同一个 `trapframe` 布局既可用于真实中断时保存现场，也可用于伪造新进程的启动现场，把中断处理与进程管理连接起来。
+
 ---
 
-## 练习2：为新创建的内核线程分配资源
+## **练习2：为新创建的内核线程分配资源**
 
 `do_fork` 的目标是创建当前进程（parent）的一个子进程（child），对于内核线程来说主要需要复制以下内容：
 
@@ -77,6 +155,66 @@ alloc_proc 的职责是从内核堆中分配一段用于保存进程控制块（
 6. **唤醒线程 (`wakeup_proc`)**：将新线程的状态设置为 `PROC_RUNNABLE`，使其可以被调度器选择执行。返回新子进程的 PID。
 
 若中间某步失败（例如内核栈分配失败），需要释放已分配的资源并返回错误码，代码中通过 `goto` 分支处理清理。
+
+- 完整代码（摘自 `kern/process/proc.c`）：
+
+```c
+int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
+{
+    int ret = -E_NO_FREE_PROC;
+    struct proc_struct *proc;
+    if (nr_process >= MAX_PROCESS)
+    {
+        goto fork_out;
+    }
+    ret = -E_NO_MEM;
+    // LAB4:EXERCISE2 2310364
+
+    //    1. call alloc_proc to allocate a proc_struct
+    if ((proc = alloc_proc()) == NULL) {
+        goto fork_out;
+    }
+    
+    //    2. call setup_kstack to allocate a kernel stack for child process
+    if (setup_kstack(proc) != 0) {
+        goto bad_fork_cleanup_proc;//子进程需要独立的内核栈用于中断/异常处理和内核调用
+    }
+    
+    //    3. call copy_mm to dup OR share mm according clone_flag
+    if (copy_mm(clone_flags, proc) != 0) {
+        goto bad_fork_cleanup_kstack;
+    }
+    
+    //    4. call copy_thread to setup tf & context in proc_struct
+    copy_thread(proc, stack, tf);
+    
+    //    5. insert proc_struct into hash_list && proc_list
+    bool intr_flag;
+    local_intr_save(intr_flag);
+    {
+        proc->pid = get_pid();
+        hash_proc(proc);
+        list_add(&proc_list, &(proc->list_link));
+        nr_process++;
+    }
+    local_intr_restore(intr_flag);
+    
+    //    6. call wakeup_proc to make the new child process RUNNABLE
+    wakeup_proc(proc);
+    
+    //    7. set ret vaule using child proc's pid
+    ret = proc->pid;
+    
+fork_out:
+    return ret;
+
+bad_fork_cleanup_kstack:
+    put_kstack(proc);
+bad_fork_cleanup_proc:
+    kfree(proc);
+    goto fork_out;
+}
+```
 
 ### 问题：ucore 是否为每个新 fork 的线程分配唯一 id？
 
@@ -133,63 +271,104 @@ get_pid(void)
 
 因此，插入新进程时调用 `proc->pid = get_pid();` 可以保证当前进程集合中 pid 唯一；通过在插入过程前后禁用中断并在临界区内完成插入（`local_intr_save`/`local_intr_restore`），避免并发分配冲突。
 
-- 完整代码（摘自 `kern/process/proc.c`）：
+### proc_list 和 hash_list 说明
+
+在 ucore 中，为了有效地管理和查找进程，我们使用了两个关键的数据结构：`proc_list` 和 `hash_list`。
+
+*   `proc_list`：定义为 `list_entry_t proc_list;`，是一个双向链表，用于维护系统中的所有进程控制块（PCB）。
+*   `hash_list`：定义为 `static list_entry_t hash_list[HASH_LIST_SIZE];`，是一个哈希表（数组），用于根据 PID 快速查找对应的进程。`HASH_LIST_SIZE` 定义为 1024 ($2^{10}$)。
 
 ```c
-int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
+// the process set's list
+list_entry_t proc_list;
+
+#define HASH_SHIFT 10
+#define HASH_LIST_SIZE (1 << HASH_SHIFT)
+#define pid_hashfn(x) (hash32(x, HASH_SHIFT))
+
+// has list for process set based on pid
+static list_entry_t hash_list[HASH_LIST_SIZE];
+```
+
+**初始化：**
+
+*   这两个结构在 `kern/process/proc.c` 的 `proc_init` 函数中进行初始化。
+*   `proc_list` 使用 `list_init(&proc_list);` 初始化为空链表。
+*   `hash_list` 通过循环遍历数组的每个元素，并对每个元素调用 `list_init` 进行初始化。
+
+```c
+void proc_init(void)
 {
-    int ret = -E_NO_FREE_PROC;
-    struct proc_struct *proc;
-    if (nr_process >= MAX_PROCESS)
-    {
-        goto fork_out;
-    }
-    ret = -E_NO_MEM;
-    // LAB4:EXERCISE2 YOUR CODE
+    int i;
 
-    //    1. call alloc_proc to allocate a proc_struct
-    if ((proc = alloc_proc()) == NULL) {
-        goto fork_out;
-    }
-    
-    //    2. call setup_kstack to allocate a kernel stack for child process
-    if (setup_kstack(proc) != 0) {
-        goto bad_fork_cleanup_proc;//子进程需要独立的内核栈用于中断/异常处理和内核调用
-    }
-    
-    //    3. call copy_mm to dup OR share mm according clone_flag
-    if (copy_mm(clone_flags, proc) != 0) {
-        goto bad_fork_cleanup_kstack;
-    }
-    
-    //    4. call copy_thread to setup tf & context in proc_struct
-    copy_thread(proc, stack, tf);
-    
-    //    5. insert proc_struct into hash_list && proc_list
-    bool intr_flag;
-    local_intr_save(intr_flag);
+    list_init(&proc_list);
+    for (i = 0; i < HASH_LIST_SIZE; i++)
     {
-        proc->pid = get_pid();
-        hash_proc(proc);
-        list_add(&proc_list, &(proc->list_link));
-        nr_process++;
+        list_init(hash_list + i);
     }
-    local_intr_restore(intr_flag);
-    
-    //    6. call wakeup_proc to make the new child process RUNNABLE
-    wakeup_proc(proc);
-    
-    //    7. set ret vaule using child proc's pid
-    ret = proc->pid;
-    
-fork_out:
-    return ret;
+    // ...
+}
+```
 
-bad_fork_cleanup_kstack:
-    put_kstack(proc);
-bad_fork_cleanup_proc:
-    kfree(proc);
-    goto fork_out;
+**作用：**
+
+*   `proc_list`：主要用于遍历系统中的所有进程。比如在 `get_pid()` 函数中，为了分配一个唯一的 PID，我们需要遍历 `proc_list` 来检查某个 PID 是否已被占用。
+*   `hash_list`：主要用于加速进程查找。当需要根据 PID 获取进程控制块时（例如 `find_proc` 函数），使用哈希表可以避免遍历整个 `proc_list`，从而将查找的时间复杂度从 O(N) 降低到 O(1)。
+
+**插入进程：**
+
+* 在 `do_fork` 函数中，当新进程创建并初始化完成后，会将其插入到这两个结构中。
+
+* 使用 `list_add(&proc_list, &(proc->list_link));` 将进程加入 `proc_list`。
+
+* 使用 `hash_proc(proc);` 将进程加入 `hash_list`。`hash_proc` 函数会根据 `proc->pid` 计算哈希值（`pid_hashfn`），然后将进程插入到对应的哈希桶中。
+
+  注：这些操作需要在关中断（`local_intr_save`）的保护下进行，以保证原子性。
+
+```c
+// hash_proc - add proc into proc hash_list
+static void
+hash_proc(struct proc_struct *proc)
+{
+    list_add(hash_list + pid_hashfn(proc->pid), &(proc->hash_link));
+}
+
+// 在 do_fork 中：
+// ...
+bool intr_flag;
+local_intr_save(intr_flag);
+{
+    proc->pid = get_pid();
+    hash_proc(proc);
+    list_add(&proc_list, &(proc->list_link));
+    nr_process++;
+}
+local_intr_restore(intr_flag);
+// ...
+```
+
+**寻找进程：**
+
+*   `find_proc(int pid)` 函数利用 `hash_list` 来查找进程。首先根据传入的 `pid` 计算哈希索引，然后遍历该索引对应的 `hash_list` 桶（链表）。在遍历过程中，比较每个进程的 PID，如果找到匹配的 PID，则返回对应的 `proc_struct` 指针。
+
+```c
+// find_proc - find proc frome proc hash_list according to pid
+struct proc_struct *
+find_proc(int pid)
+{
+    if (0 < pid && pid < MAX_PID)
+    {
+        list_entry_t *list = hash_list + pid_hashfn(pid), *le = list;
+        while ((le = list_next(le)) != list)
+        {
+            struct proc_struct *proc = le2proc(le, hash_link);
+            if (proc->pid == pid)
+            {
+                return proc;
+            }
+        }
+    }
+    return NULL;
 }
 ```
 
@@ -208,7 +387,7 @@ void proc_run(struct proc_struct *proc)
 {
     if (proc != current)
     {
-        // LAB4:EXERCISE3 YOUR CODE
+        // LAB4:EXERCISE3 2310364
         bool intr_flag;
         struct proc_struct *prev = current, *next = proc;
         
@@ -312,25 +491,13 @@ make qemu
 与预期结果一致，说明实现正确
 
 
-
 在该实验根目录下运行**make grade**命令得到如下结果：
 
 ![grade](./img/grade.png)
 
-说明通过相应测试
+说明通过相应测试。
 
----
-
-**总结**
-
-- 本次 Lab4 实现了 `alloc_proc`、`do_fork` 与 `proc_run` 的关键功能，配合已有的 `copy_thread`、`setup_kstack`、`get_pid` 等函数，可以成功创建内核线程并切换执行。
-- `proc_struct` 中的 `context` 用于保存/恢复内核级的寄存器上下文以支持上下文切换；`tf` 为 trapframe，用于保存中断/异常时的完整 CPU 状态并为新线程初始化返回现场。
-- `get_pid()` 提供了遍历检查机制保证 PID 在当前进程集合中的唯一性。
-- 实验运行时创建了 2 个内核线程（idle 与 init），输出与最后的 panic 都是符合当前实验代码状态的预期结果。
-
-
-
-## 扩展练习challenge
+## **扩展练习challenge**
 
 ### 1. 说明语句`local_intr_save(intr_flag);....local_intr_restore(intr_flag);` 是如何实现开关中断的？
 
