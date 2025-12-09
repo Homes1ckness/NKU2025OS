@@ -336,6 +336,152 @@ struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
     return page;
 }
 
+// unmap_range - unmap the range of memory from start to end
+void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+
+    do {
+        pte_t *ptep = get_pte(pgdir, start, 0);
+        if (ptep == NULL) {
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue;
+        }
+        if (*ptep != 0) {
+            page_remove_pte(pgdir, start, ptep);
+        }
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+}
+
+// exit_range - free page tables in the given range
+void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+
+    uintptr_t d1start, d0start;
+    int free_pt, free_pd0;
+    pde_t *pd0, *pt, pde1, pde0;
+    d1start = ROUNDDOWN(start, PDSIZE);
+    d0start = ROUNDDOWN(start, PTSIZE);
+    do {
+        pde1 = pgdir[PDX1(d1start)];
+        if (pde1 & PTE_V) {
+            pd0 = page2kva(pde2page(pde1));
+            free_pd0 = 1;
+            do {
+                pde0 = pd0[PDX0(d0start)];
+                if (pde0 & PTE_V) {
+                    pt = page2kva(pde2page(pde0));
+                    free_pt = 1;
+                    for (int i = 0; i < NPTEENTRY; i++)
+                        if (pt[i] & PTE_V) {
+                            free_pt = 0;
+                            break;
+                        }
+                    if (free_pt) {
+                        free_page(pde2page(pde0));
+                        pd0[PDX0(d0start)] = 0;
+                    }
+                } else
+                    free_pd0 = 0;
+                d0start += PTSIZE;
+            } while (d0start != 0 && d0start < d1start + PDSIZE && d0start < end);
+            if (free_pd0) {
+                free_page(pde2page(pde1));
+                pgdir[PDX1(d1start)] = 0;
+            }
+        }
+        d1start += PDSIZE;
+        d0start = d1start;
+    } while (d1start != 0 && d1start < end);
+}
+
+/* copy_range - copy content of memory (start, end) of one process A to another
+ * process B
+ * @to:    the addr of process B's Page Directory
+ * @from:  the addr of process A's Page Directory
+ * @share: flags to indicate to dup OR share. If share=1, use COW mechanism
+ *
+ * CALL GRAPH: copy_mm-->dup_mmap-->copy_range
+ */
+int copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end,
+               bool share) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+    // copy content by page unit.
+    do {
+        // call get_pte to find process A's pte according to the addr start
+        pte_t *ptep = get_pte(from, start, 0), *nptep;
+        if (ptep == NULL) {
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue;
+        }
+        // call get_pte to find process B's pte according to the addr start. If
+        // pte is NULL, just alloc a PT
+        if (*ptep & PTE_V) {
+            if ((nptep = get_pte(to, start, 1)) == NULL) {
+                return -E_NO_MEM;
+            }
+            uint32_t perm = (*ptep & PTE_USER);
+            // get page from ptep
+            struct Page *page = pte2page(*ptep);
+            
+            int ret = 0;
+            
+            if (share) {
+                /* LAB5:EXERCISE4 - COW (Copy on Write) Implementation
+                 * 使用COW机制：父子进程共享同一个物理页面
+                 * 1. 将原始页表项设置为只读
+                 * 2. 子进程的页表项也设置为只读，指向同一物理页面
+                 * 3. 增加物理页面的引用计数
+                 * 当进程尝试写入时，会触发页面错误，在do_pgfault中进行实际复制
+                 */
+                // 设置父进程的页表项为只读（清除写权限）
+                *ptep = (*ptep) & (~PTE_W);
+                // 子进程的页表项也设置为只读，指向同一物理页面
+                *nptep = (*ptep);
+                // 增加页面引用计数
+                page_ref_inc(page);
+            } else {
+                /* LAB5:EXERCISE2 - Normal copy (not COW)
+                 * replicate content of page to npage, build the map of phy addr of
+                 * nage with the linear addr start
+                 *
+                 * Some Useful MACROs and DEFINEs, you can use them in below
+                 * implementation.
+                 * MACROs or Functions:
+                 *    page2kva(struct Page *page): return the kernel vritual addr of
+                 * memory which page managed (SEE pmm.h)
+                 *    page_insert: build the map of phy addr of an Page with the
+                 * linear addr la
+                 *    memcpy: typical memory copy function
+                 *
+                 * (1) find src_kvaddr: the kernel virtual address of page
+                 * (2) find dst_kvaddr: the kernel virtual address of npage
+                 * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
+                 * (4) build the map of phy addr of nage with the linear addr start
+                 */
+                // alloc a page for process B
+                struct Page *npage = alloc_page();
+                assert(page != NULL);
+                assert(npage != NULL);
+                // (1) find src_kvaddr: the kernel virtual address of page
+                void *src_kvaddr = page2kva(page);
+                // (2) find dst_kvaddr: the kernel virtual address of npage
+                void *dst_kvaddr = page2kva(npage);
+                // (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
+                memcpy(dst_kvaddr, src_kvaddr, PGSIZE);
+                // (4) build the map of phy addr of nage with the linear addr start
+                ret = page_insert(to, npage, start, perm);
+            }
+            assert(ret == 0);
+        }
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+    return 0;
+}
+
 static void check_alloc_page(void) {
     pmm_manager->check();
     cprintf("check_alloc_page() succeeded!\n");

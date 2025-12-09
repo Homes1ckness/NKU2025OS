@@ -55,7 +55,7 @@ grade_backtrace2(int arg0, int arg1, int arg2, int arg3) {
 
 void __attribute__((noinline))
 grade_backtrace1(int arg0, int arg1) {
-    grade_backtrace2(arg0, (int)&arg0, arg1, (int)&arg1);
+    grade_backtrace2(arg0, (int)(uintptr_t)&arg0, arg1, (int)(uintptr_t)&arg1);
 }
 
 void __attribute__((noinline))
@@ -65,7 +65,7 @@ grade_backtrace0(int arg0, int arg1, int arg2) {
 
 void
 grade_backtrace(void) {
-    grade_backtrace0(0, (int)kern_init, 0xffff0000);
+    grade_backtrace0(0, (int)(uintptr_t)kern_init, 0xffff0000);
 }
 
 static void
