@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <unistd.h>
 
+volatile int enable_cow = 1;
+
 /* ------------- process/thread mechanism design&implementation -------------
 (an simplified Linux process/thread mechanism )
 introduction:
@@ -412,6 +414,68 @@ bad_mm:
     return ret;
 }
 
+static int
+copy_mm_cow(uint32_t clone_flags, struct proc_struct *proc)
+{
+    struct mm_struct *mm, *oldmm = current->mm;
+
+    // 如果父进程是内核线程（没有用户空间），子进程也是内核线程
+    if (oldmm == NULL)
+    {
+        return 0;
+    }
+    
+    // 如果设置了CLONE_VM标志，父子进程共享同一个mm（创建线程而非进程）
+    if (clone_flags & CLONE_VM)
+    {
+        mm = oldmm;
+        goto good_mm;
+    }
+    
+    int ret = -E_NO_MEM;
+    
+    // 为子进程创建新的mm_struct
+    if ((mm = mm_create()) == NULL)
+    {
+        goto bad_mm;
+    }
+    
+    // 为子进程设置页目录表
+    if (setup_pgdir(mm) != 0)
+    {
+        goto bad_pgdir_cleanup_mm;
+    }
+    
+    // 使用COW方式复制父进程的内存空间
+    lock_mm(oldmm);
+    {
+        // 关键：使用dup_mmap_cow而不是dup_mmap
+        // dup_mmap_cow会调用copy_range_cow共享页面
+        ret = dup_mmap_cow(mm, oldmm);
+    }
+    unlock_mm(oldmm);
+
+    if (ret != 0)
+    {
+        goto bad_dup_cleanup_mmap;
+    }
+
+good_mm:
+    mm_count_inc(mm);
+    proc->mm = mm;
+    proc->pgdir = PADDR(mm->pgdir);
+    return 0;
+    
+bad_dup_cleanup_mmap:
+    exit_mmap(mm);
+    put_pgdir(mm);
+    
+bad_pgdir_cleanup_mm:
+    mm_destroy(mm);
+    
+bad_mm:
+    return ret;
+}
 // copy_thread - setup the trapframe on the  process's kernel stack top and
 //             - setup the kernel entry point and stack of process
 static void
@@ -492,7 +556,18 @@ int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf)
     }
     
     //    3. call copy_mm to dup OR share mm according clone_flag
-    if (copy_mm(clone_flags, proc) != 0) {
+    int copy_ret;
+        if (enable_cow) {
+            // 使用COW方式复制内存
+            cprintf("[FORK] Using COW to copy memory\n");
+            copy_ret = copy_mm_cow(clone_flags, proc);
+        } else {
+            // 使用传统方式复制内存
+            cprintf("[FORK] Using traditional copy to duplicate memory\n");
+            copy_ret = copy_mm(clone_flags, proc);
+        }
+        
+        if (copy_ret != 0) {
         goto bad_fork_cleanup_kstack;
     }
     
@@ -742,7 +817,7 @@ load_icode(unsigned char *binary, size_t size)
     // Keep sstatus
     uintptr_t sstatus = tf->status;
     memset(tf, 0, sizeof(struct trapframe));
-    /* LAB5:EXERCISE1 YOUR CODE
+    /* LAB5:EXERCISE1 2310364
      * should set tf->gpr.sp, tf->epc, tf->status
      * NOTICE: If we set trapframe correctly, then the user level process can return to USER MODE from kernel. So
      *          tf->gpr.sp should be user stack top (the value of sp)

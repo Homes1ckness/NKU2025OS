@@ -382,3 +382,158 @@ bool user_mem_check(struct mm_struct *mm, uintptr_t addr, size_t len, bool write
     }
     return KERN_ACCESS(addr, addr + len);
 }
+
+int do_pgfault_cow(struct mm_struct *mm, uint32_t error_code, uintptr_t addr)
+{
+    cprintf("[COW] Page fault at addr 0x%x, error_code=0x%x\n", addr, error_code);
+    
+    // 参数检查
+    if (mm == NULL)
+    {
+        cprintf("[COW] ERROR: mm is NULL\n");
+        return -E_INVAL;
+    }
+    
+    // 将addr对齐到页边界
+    uintptr_t la = ROUNDDOWN(addr, PGSIZE);
+    
+    // 获取页表项
+    pte_t *ptep = get_pte(mm->pgdir, la, 0);
+    
+    // 检查页表项是否存在
+    if (ptep == NULL || !(*ptep & PTE_V))
+    {
+        cprintf("[COW] ERROR: Page table entry not found or invalid\n");
+        return -E_INVAL;
+    }
+    
+    // 检查是否是COW页面
+    if (!(*ptep & PTE_COW))
+    {
+        cprintf("[COW] ERROR: Not a COW page (PTE=0x%x)\n", *ptep);
+        return -E_INVAL;
+    }
+    
+    cprintf("[COW] Valid COW page detected, PTE=0x%x\n", *ptep);
+    
+    // 获取当前物理页面
+    struct Page *old_page = pte2page(*ptep);
+    assert(old_page != NULL);
+    
+    // 检查引用计数
+    int ref_count = page_ref(old_page);
+    cprintf("[COW] Physical page ref_count = %d\n", ref_count);
+    
+    // === 情况1：当前进程是唯一引用者（ref=1） ===
+    // 不需要复制，直接授予写权限即可
+    if (ref_count == 1)
+    {
+        cprintf("[COW] Only one reference, granting write permission directly\n");
+        
+        // 获取原始权限并恢复写权限
+        uint32_t perm = (*ptep & PTE_USER) | PTE_W;  // 添加写权限
+        perm &= ~PTE_COW;  // 清除COW标记
+        
+        // 更新页表项
+        *ptep = ((*ptep & ~0x3FF) | perm);  // 保留PPN，更新权限位
+        
+        // 刷新TLB
+        tlb_invalidate(mm->pgdir, la);
+        
+        cprintf("[COW] Write permission granted, new PTE=0x%x\n", *ptep);
+        return 0;
+    }
+    
+    // === 情况2：多个进程共享（ref>1） ===
+    // 需要分配新页面并复制数据
+    cprintf("[COW] Multiple references (%d), performing copy\n", ref_count);
+    
+    // 1. 分配新的物理页面
+    struct Page *new_page = alloc_page();
+    if (new_page == NULL)
+    {
+        cprintf("[COW] ERROR: Failed to allocate new page\n");
+        return -E_NO_MEM;
+    }
+    
+    cprintf("[COW] New page allocated\n");
+    
+    // 2. 复制旧页面的内容到新页面
+    void *old_kva = page2kva(old_page);
+    void *new_kva = page2kva(new_page);
+    memcpy(new_kva, old_kva, PGSIZE);
+    
+    cprintf("[COW] Page content copied\n");
+    
+    // 3. 准备新的权限：添加写权限，移除COW标记
+    uint32_t perm = (*ptep & PTE_USER) | PTE_W;
+    perm &= ~PTE_COW;
+    
+    // 4. 建立新的映射
+    //    page_insert会自动：
+    //    - 解除旧映射（减少old_page的引用计数）
+    //    - 建立新映射（new_page的引用计数变为1）
+    //    - 刷新TLB
+    int ret = page_insert(mm->pgdir, new_page, la, perm);
+    if (ret != 0)
+    {
+        cprintf("[COW] ERROR: page_insert failed\n");
+        free_page(new_page);
+        return ret;
+    }
+    
+    cprintf("[COW] New mapping established, PTE=0x%x\n", *get_pte(mm->pgdir, la, 0));
+    cprintf("[COW] Old page ref_count decreased to %d\n", page_ref(old_page));
+    cprintf("[COW] New page ref_count = %d\n", page_ref(new_page));
+    
+    return 0;
+}
+
+/* dup_mmap_cow - COW版本的dup_mmap函数
+ * 
+ * @to:   目标进程的内存管理结构
+ * @from: 源进程的内存管理结构
+ *
+ * 功能：使用COW机制复制源进程的所有VMA到目标进程
+ *       不立即复制物理页面，而是共享并标记为COW
+ *
+ * 与dup_mmap的区别：
+ * - dup_mmap: 调用copy_range立即复制所有物理页面
+ * - dup_mmap_cow: 调用copy_range_cow使用COW共享页面
+ *
+ * 返回值：
+ *   0   : 成功
+ *  -E_NO_MEM : 内存分配失败
+ */
+int dup_mmap_cow(struct mm_struct *to, struct mm_struct *from)
+{
+    assert(to != NULL && from != NULL);
+    
+    list_entry_t *list = &(from->mmap_list), *le = list;
+    
+    // 遍历源进程的所有VMA
+    while ((le = list_prev(le)) != list)
+    {
+        struct vma_struct *vma, *nvma;
+        vma = le2vma(le, list_link);
+        
+        // 为目标进程创建相同的VMA
+        nvma = vma_create(vma->vm_start, vma->vm_end, vma->vm_flags);
+        if (nvma == NULL)
+        {
+            return -E_NO_MEM;
+        }
+        
+        // 插入到目标进程的VMA链表
+        insert_vma_struct(to, nvma);
+        
+        // 使用COW方式复制页面映射
+        bool share = 0;  // COW中不使用此参数
+        if (copy_range_cow(to->pgdir, from->pgdir, vma->vm_start, vma->vm_end, share) != 0)
+        {
+            return -E_NO_MEM;
+        }
+    }
+    
+    return 0;
+}

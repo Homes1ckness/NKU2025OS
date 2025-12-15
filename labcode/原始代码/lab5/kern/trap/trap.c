@@ -198,6 +198,7 @@ void exception_handler(struct trapframe *tf)
         break;
     case CAUSE_USER_ECALL:
         // cprintf("Environment call from U-mode\n");
+        
         tf->epc += 4;
         syscall();
         break;
@@ -219,7 +220,42 @@ void exception_handler(struct trapframe *tf)
         cprintf("Load page fault\n");
         break;
     case CAUSE_STORE_PAGE_FAULT:
-        cprintf("Store/AMO page fault\n");
+        /* Store/AMO页面错误处理（支持COW）
+         * 
+         * 触发原因：
+         * 1. 页面不存在（需要分配新页面）
+         * 2. 页面存在但没有写权限（可能是COW页面）
+         * 
+         * COW处理流程：
+         * 1. 获取触发异常的虚拟地址（stval寄存器）
+         * 2. 检查当前进程是否有mm（用户进程）
+         * 3. 尝试用do_pgfault_cow处理COW
+         * 4. 如果不是COW页面，fallback到正常的page fault处理
+         */
+        cprintf("Store/AMO page fault at 0x%x\n", tf->tval);
+        
+        // 检查是否是用户进程（内核线程没有mm）
+        if (current != NULL && current->mm != NULL)
+        {
+            // 尝试COW处理
+            // do_pgfault_cow会检查是否是COW页面：
+            // - 如果是：执行写时复制，返回0
+            // - 如果不是：返回错
+            int cow_ret = do_pgfault_cow(current->mm, tf->cause, tf->tval);
+            
+            if (cow_ret == 0)
+            {
+                // COW处理成功，直接返回
+                cprintf("COW page fault handled successfully\n");
+                break;
+            }
+            
+            // 不是COW page fault，继续正常处理
+            cprintf("Not a COW page fault (ret=%d), handling as normal page fault\n", cow_ret);
+        }
+        
+        // 普通的Store page fault处理
+        cprintf("Store/AMO page fault (non-COW)\n");
         break;
     default:
         print_trapframe(tf);

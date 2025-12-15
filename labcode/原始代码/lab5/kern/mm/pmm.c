@@ -404,7 +404,7 @@ int copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end,
             assert(page != NULL);
             assert(npage != NULL);
             int ret = 0;
-            /* LAB5:EXERCISE2 YOUR CODE
+            /* LAB5:EXERCISE2 2313310
              * replicate content of page to npage, build the map of phy addr of
              * nage with the linear addr start
              *
@@ -438,6 +438,76 @@ int copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end,
     return 0;
 }
 
+int copy_range_cow(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end,
+                   bool share)
+{
+    // 确保地址按页对齐
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+    
+    // 逐页处理COW映射
+    do
+    {
+        // 获取源进程的页表项
+        pte_t *ptep = get_pte(from, start, 0), *nptep;
+        
+        if (ptep == NULL)
+        {
+            // 源进程此页表不存在，跳到下一个页表
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue;
+        }
+        
+        // 检查页表项是否有效
+        if (*ptep & PTE_V)
+        {
+            // 在目标进程中获取/创建对应的页表项
+            if ((nptep = get_pte(to, start, 1)) == NULL)
+            {
+                return -E_NO_MEM;
+            }
+            
+            // 获取源页面和原始权限
+            uint32_t perm = (*ptep & PTE_USER);
+            struct Page *page = pte2page(*ptep);
+            assert(page != NULL);
+            
+            // === COW核心逻辑 ===
+            
+            // 1. 增加物理页面的引用计数
+            //    因为现在父子进程都映射到同一物理页面
+            //    ref = 1 (仅父进程) -> ref = 2 (父进程+子进程)
+            page_ref_inc(page);
+            
+            // 2. 修改权限：清除写权限PTE_W，添加COW标记
+            //    原权限可能是：PTE_V | PTE_R | PTE_W | PTE_U
+            //    新权限变为：PTE_V | PTE_R | PTE_U | PTE_COW (注意没有PTE_W)
+            uint32_t cow_perm = (perm & ~PTE_W) | PTE_COW;
+            
+            // 3. 在目标进程的页表中建立映射
+            //    指向同一物理页面page，使用COW权限
+            int ret = page_insert(to, page, start, cow_perm);
+            assert(ret == 0);
+            
+            // 4. 更新源进程的页表项权限为COW
+            //    这一步很关键！源进程(父进程)的页面也要标记为只读+COW
+            //    否则父进程可以直接写入，破坏COW机制
+            //    
+            //    注意：page_insert会自动调用tlb_invalidate刷新TLB
+            //    但这里我们需要手动更新源页表项并刷新TLB
+            *ptep = (*ptep & ~PTE_W) | PTE_COW;
+            
+            // 5. 刷新TLB，确保CPU不会使用旧的页表项缓存
+            //    父进程的TLB中可能缓存了带PTE_W权限的旧映射
+            //    必须刷新，否则父进程仍可直接写入
+            tlb_invalidate(from, start);
+        }
+        
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+    
+    return 0;
+}
 // page_remove - free an Page which is related linear address la and has an
 // validated pte
 void page_remove(pde_t *pgdir, uintptr_t la)

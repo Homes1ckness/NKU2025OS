@@ -184,11 +184,11 @@
 #define PTE_A 0x040    // Accessed
 #define PTE_D 0x080    // Dirty
 #define PTE_SOFT 0x300 // Reserved for Software
+#define PTE_COW 0x100
 
 #define PTE_PPN_SHIFT 10
 
 #define PTE_TABLE(PTE) (((PTE) & (PTE_V | PTE_R | PTE_W | PTE_X)) == PTE_V)
-
 #ifdef __riscv
 
 #if __riscv_xlen == 64
