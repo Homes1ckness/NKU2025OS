@@ -31,10 +31,10 @@ DTB init completed
 
 Special kernel symbols:
   entry  0xc020004a (virtual)
-  etext  0xc02056f8 (virtual)
-  edata  0xc02a6470 (virtual)
-  end    0xc02aa914 (virtual)
-Kernel executable memory footprint: 683KB
+  etext  0xc0205cf4 (virtual)
+  edata  0xc02d607c (virtual)
+  end    0xc02da524 (virtual)
+Kernel executable memory footprint: 874KB
 memory management: default_pmm_manager
 physcial memory map:
   memory: 0x08000000, [0x80000000, 0x87ffffff].
@@ -46,10 +46,24 @@ use SLOB allocator
 kmalloc_init() succeeded!
 check_vma_struct() succeeded!
 check_vmm() succeeded.
+[FORK] Using COW to copy memory
 ++ setup timer interrupts
+[FORK] Using COW to copy memory
 kernel_execve: pid = 2, name = "spin".
 Breakpoint
 I am the parent. Forking the child...
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff6c
+[COW] Page fault at addr 0x7fffff6c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201395db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2013c81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am the parent. Running the child...
 I am the child. spinning ...
 I am the parent.  Killing the child...
@@ -58,6 +72,6 @@ wait returns 0
 spin may pass.
 all user-mode processes have quit.
 init check memory pass.
-kernel panic at kern/process/proc.c:541:
+kernel panic at kern/process/proc.c:616:
     initproc exit.
 

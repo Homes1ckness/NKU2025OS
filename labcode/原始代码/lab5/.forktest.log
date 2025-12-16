@@ -31,10 +31,10 @@ DTB init completed
 
 Special kernel symbols:
   entry  0xc020004a (virtual)
-  etext  0xc02056f8 (virtual)
-  edata  0xc02a6470 (virtual)
-  end    0xc02aa914 (virtual)
-Kernel executable memory footprint: 683KB
+  etext  0xc0205cf4 (virtual)
+  edata  0xc02d607c (virtual)
+  end    0xc02da524 (virtual)
+Kernel executable memory footprint: 874KB
 memory management: default_pmm_manager
 physcial memory map:
   memory: 0x08000000, [0x80000000, 0x87ffffff].
@@ -46,44 +46,771 @@ use SLOB allocator
 kmalloc_init() succeeded!
 check_vma_struct() succeeded!
 check_vmm() succeeded.
+[FORK] Using COW to copy memory
 ++ setup timer interrupts
+[FORK] Using COW to copy memory
 kernel_execve: pid = 2, name = "forktest".
 Breakpoint
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201395db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2013c81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2013c9db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2013e81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2013e9db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014081f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201409db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014281f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201429db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014481f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201449db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014681f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201469db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014881f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201489db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014a81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014a9db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014c81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014c9db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014e81f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014e9db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015081f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201509db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015281f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201529db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015481f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201549db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015681f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201569db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20158c1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20158ddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015ac1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015addb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015cc1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015cddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015ec1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015eddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20160c1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20160ddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20162c1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20162ddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20164c1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20164ddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20166c1f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20166ddb
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016901f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201691db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016b01f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016b1db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016d01f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016d1db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016f01f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016f1db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017101f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201711db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017301f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201731db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017501f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201751db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017701f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201771db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017941f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
+[FORK] Using COW to copy memory
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x201795db
+[COW] Physical page ref_count = 3
+[COW] Multiple references (3), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017b41f
+[COW] Old page ref_count decreased to 2
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 31
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2017711b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017a01f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 30
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2017511b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2017801f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 29
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2017311b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20175c1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 28
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2017111b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20173c1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 27
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016f11b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20171c1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 26
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016d11b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016fc1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 25
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016b11b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016dc1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 24
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2016911b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016bc1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 23
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20166d1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20169c1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 22
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20164d1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x20167c1f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 21
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20162d1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016581f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 20
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20160d1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016381f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 19
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015ed1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2016181f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 18
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015cd1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015f81f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 17
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015ad1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015d81f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 16
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x20158d1b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015b81f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 15
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015691b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015981f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 14
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015491b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015781f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 13
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015291b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015541f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 12
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2015091b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015341f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 11
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014e91b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2015141f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 10
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014c91b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014f41f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 9
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014a91b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014d41f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 8
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014891b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014b41f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 7
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014691b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014941f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 6
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014491b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014741f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 5
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014291b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014541f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 4
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2014091b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014341f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 3
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2013e91b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2014141f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 2
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2013c91b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2013f41f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 1
+Store/AMO page fault at 0x7fffff5c
+[COW] Page fault at addr 0x7fffff5c, error_code=0xf
+[COW] Valid COW page detected, PTE=0x2013951b
+[COW] Physical page ref_count = 2
+[COW] Multiple references (2), performing copy
+[COW] New page allocated
+[COW] Page content copied
+[COW] New mapping established, PTE=0x2013d41f
+[COW] Old page ref_count decreased to 1
+[COW] New page ref_count = 1
+COW page fault handled successfully
 I am child 0
 forktest pass.
 all user-mode processes have quit.
 init check memory pass.
-kernel panic at kern/process/proc.c:541:
+kernel panic at kern/process/proc.c:616:
     initproc exit.
 
