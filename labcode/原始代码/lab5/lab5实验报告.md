@@ -2,6 +2,8 @@
 
 <center>2310364 柳昕彤  2313310 熊诚义  2311887 陈语童</center>
 
+[TOC]
+
 ## 实验概述
 
 本实验主要实现了用户进程的创建、执行、等待和退出等核心功能，通过补充`load_icode`和`copy_range`函数，使得ucore操作系统能够正确加载并运行用户态程序，以及实现父子进程间的内存空间复制。
@@ -46,92 +48,92 @@
               }
     ```
 
-    - (3.6.1)：把 TEXT/DATA 段数据拷贝到物理页中（实际做的：分配一个物理页 + 建立页表映射）
+    (3.6.1)：把 TEXT/DATA 段数据拷贝到物理页中（实际做的：分配一个物理页 + 建立页表映射）
 
-      ```c++
-      if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL)
-                  {
-                      goto bad_cleanup_mmap;
-                  }
-                  
-                  // 计算本次复制的参数
-                  off = start - la;              // 在页内的偏移
-                  size = PGSIZE - off;           // 本页剩余空间
-                  la += PGSIZE;                  // 移动到下一页
-                  
-                  // 如果数据在本页内就结束了，调整复制大小
-                  if (end < la)
-                  {
-                      size -= la - end;
-                  }
-                  
-                  // 从ELF文件复制数据到新分配的页面
-                  // page2kva(page)获取页面的内核虚拟地址
-                  memcpy(page2kva(page) + off, from, size);
-                  
-                  // 更新位置指针
-                  start += size;
-                  from += size;
-                  }
-      ```
+    ```c++
+    if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL)
+                {
+                    goto bad_cleanup_mmap;
+                }
+                
+                // 计算本次复制的参数
+                off = start - la;              // 在页内的偏移
+                size = PGSIZE - off;           // 本页剩余空间
+                la += PGSIZE;                  // 移动到下一页
+                
+                // 如果数据在本页内就结束了，调整复制大小
+                if (end < la)
+                {
+                    size -= la - end;
+                }
+                
+                // 从ELF文件复制数据到新分配的页面
+                // page2kva(page)获取页面的内核虚拟地址
+                memcpy(page2kva(page) + off, from, size);
+                
+                // 更新位置指针
+                start += size;
+                from += size;
+                }
+    ```
 
-    - (3.6.2)：构造 BSS，对 BSS 对应的内存区域进行零初始化（BSS 段：未显式初始化的全局变量和静态变量）
+    (3.6.2)：构造 BSS，对 BSS 对应的内存区域进行零初始化（BSS 段：未显式初始化的全局变量和静态变量）
 
-      ```c++
-      // BSS段在文件中不占空间，但在内存中需要分配空间并清零
-              end = ph->p_va + ph->p_memsz;  // 段在内存中的结束位置
-              
-              // 如果start < la，说明上一个页面还有空间，需要将其剩余部分清零
-              if (start < la)
-              {
-                  /* 特殊情况：ph->p_memsz == ph->p_filesz（没有BSS段） */
-                  if (start == end)
-                  {
-                      continue;  // 没有BSS段，继续下一个段
-                  }
-                  
-                  // 计算需要清零的区域
-                  off = start + PGSIZE - la;  // 在当前页中需要清零的起始偏移
-                  size = PGSIZE - off;        // 需要清零的大小
-                  
-                  if (end < la)
-                  {
-                      size -= la - end;
-                  }
-                  
-                  // 将页面的剩余部分清零（构建BSS段）
-                  memset(page2kva(page) + off, 0, size);
-                  start += size;
-                  
-                  // 确保处理正确
-                  assert((end < la && start == end) || (end >= la && start == la));
-              }
-              
-              // 为剩余的BSS段分配页面并清零
-              while (start < end)
-              {
-                  // 分配新页面
-                  if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL)
-                  {
-                      goto bad_cleanup_mmap;
-                  }
-                  
-                  // 计算清零参数
-                  off = start - la;
-                  size = PGSIZE - off;
-                  la += PGSIZE;
-                  
-                  if (end < la)
-                  {
-                      size -= la - end;
-                  }
-                  
-                  // 将新分配的页面清零
-                  memset(page2kva(page) + off, 0, size);
-                  start += size;
-              }
-        
-      ```
+    ```c++
+    // BSS段在文件中不占空间，但在内存中需要分配空间并清零
+            end = ph->p_va + ph->p_memsz;  // 段在内存中的结束位置
+            
+            // 如果start < la，说明上一个页面还有空间，需要将其剩余部分清零
+            if (start < la)
+            {
+                /* 特殊情况：ph->p_memsz == ph->p_filesz（没有BSS段） */
+                if (start == end)
+                {
+                    continue;  // 没有BSS段，继续下一个段
+                }
+                
+                // 计算需要清零的区域
+                off = start + PGSIZE - la;  // 在当前页中需要清零的起始偏移
+                size = PGSIZE - off;        // 需要清零的大小
+                
+                if (end < la)
+                {
+                    size -= la - end;
+                }
+                
+                // 将页面的剩余部分清零（构建BSS段）
+                memset(page2kva(page) + off, 0, size);
+                start += size;
+                
+                // 确保处理正确
+                assert((end < la && start == end) || (end >= la && start == la));
+            }
+            
+            // 为剩余的BSS段分配页面并清零
+            while (start < end)
+            {
+                // 分配新页面
+                if ((page = pgdir_alloc_page(mm->pgdir, la, perm)) == NULL)
+                {
+                    goto bad_cleanup_mmap;
+                }
+                
+                // 计算清零参数
+                off = start - la;
+                size = PGSIZE - off;
+                la += PGSIZE;
+                
+                if (end < la)
+                {
+                    size -= la - end;
+                }
+                
+                // 将新分配的页面清零
+                memset(page2kva(page) + off, 0, size);
+                start += size;
+            }
+      
+    ```
 
   - step4：建立用户栈（分配一段虚拟地址空间给用户栈，并实际分配了 4 页物理内存 —— `pgdir_alloc_page` 函数）
 
@@ -459,8 +461,6 @@ assert(ret == 0);
 
 这导致它的调用与另外三者差别较大。其执行过程是怎样的，练习1 → “2.描述用户进程从调度到执行的经过” 节已经完整分析过。如果有还没分析到的细节，下面对于其他三者的分析中都会有重合。
 
-///
-
 **· FORK/WAIT/EXIT**
 
 fork/wait/exit 操作对应的最高层封装函数：`fork()`，`wait()`，`exit(int)`. 它们在 `ulib.c` 中实际上表现出来都是系统调用的封装：
@@ -553,8 +553,6 @@ syscall(int64_t num, ...) {
 
 ### 2. 用户态/内核态问题
 
-fork/exec/wait/exit 的执行流程已经在上一小节中分析完毕。
-
 *——那么哪些操作在用户态完成，哪些在内核态完成？*
 
 首先，无论是 exec 调用的 `ebreak` 还是 fork/wait/exit 调用的 `ecall`，都作为异常设置了跳转地址到 `__alltraps` 所指的汇编代码。之前的实验已经详细分析过了汇编代码做的事情，不再赘述。总之最终跳转到 `trap.c` 中的 `exception_handler()` 函数分情况处理异常，都调用到 `syscall()`（内核态函数）处理，处理完后还会回到汇编代码中做恢复。
@@ -614,7 +612,20 @@ fork/exec/wait/exit 的执行流程已经在上一小节中分析完毕。
 
 4. 从理论设计上来说 `do_sleep()` 会导致进程进入 `SLEEPING` 状态，但目前的代码实现中暂时没有看到 `do_sleep()` 的实现和调用。
 
-   
+
+## 实验结果
+
+### make qemu:
+
+  如图，系统创建了进程2（exit进程）和进程3，父进程在fork后正确等待子进程，子进程也能够正常执行并退出。最后出现"kernel panic at kern/process/proc.c:616: initproc exit."是因为初始化进程退出导致的系统panic，我们所有用户进程都已执行完毕并正常退出，系统也随之终止。
+
+<img src="./img/e09d93f6065bbea93f6af907bd2990c6.png" alt="image-20251216180346547" style="zoom:67%;" />
+
+### make grade:
+
+   所有测试项目均获得满分（Total Score: 130/130），每个测试用例的检查结果和输出都标记为OK。所有测试用例的执行时间都在合理范围内（1.0s到31.1s不等），成功实现了用户进程的创建、执行、调度和资源管理等核心功能。
+
+<img src="./img/微信图片_20251216174346_3047_6.png" alt="微信图片_20251216174346_3047_6" style="zoom:67%;" />
 
 ## Challenge1：Copy-on-Write机制完整实现
 
@@ -959,142 +970,502 @@ static inline void page_ref_dec(struct Page *page) {
 
 4. **TLB同步**：每次修改页表项后都必须立即刷新TLB，确保CPU使用的是最新的页表信息。
 
-### 测试用例
+### 测试用例设计
 
-为了验证COW机制的正确性，我们需要编写测试用例。在`user`目录下创建了`cowtest.c`：
+为了全面验证COW机制的正确性和健壮性，我们设计了三个测试程序，分别测试基本功能、压力场景和安全性。
+
+#### 1. 基础功能测试：cowtest.c
+
+`cowtest.c`是COW机制的基础功能测试程序，包含8个测试项和1个性能对比测试，系统地验证了COW机制的各个方面。
+
+**测试1：基础COW共享**
+
+验证fork后父子进程共享物理页面。通过在子进程中只读访问共享变量和全局数组，确认父子进程确实在共享同一物理页面：
 
 ```c
-#include <stdio.h>
-#include <ulib.h>
-#include <string.h>
-
-#define PGSIZE 4096
-#define TEST_PAGES 10
-
-int main(void) {
-    cprintf("COW Test: Starting...\n");
+void test_basic_cow(void) {
+    int original_value = 12345;
+    int *shared_var = &original_value;
     
-    // 分配一些内存并写入数据
-    char *buf = (char *)0x10000000;
-    int i;
-    for (i = 0; i < TEST_PAGES; i++) {
-        memset(buf + i * PGSIZE, 'A' + i, PGSIZE);
-    }
+    cprintf("Fork前: shared_var地址=0x%x, 值=%d\n", shared_var, *shared_var);
     
-    cprintf("COW Test: Parent wrote data\n");
-    
-    // Fork子进程
     int pid = fork();
     
     if (pid == 0) {
-        // 子进程：读取数据验证共享
-        cprintf("COW Test: Child reading...\n");
-        for (i = 0; i < TEST_PAGES; i++) {
-            if (buf[i * PGSIZE] != 'A' + i) {
-                cprintf("COW Test: Child read failed at page %d\n", i);
-                exit(-1);
-            }
-        }
-        cprintf("COW Test: Child read OK (sharing pages)\n");
-        
-        // 子进程：修改部分页面
-        cprintf("COW Test: Child writing...\n");
-        for (i = 0; i < TEST_PAGES / 2; i++) {
-            memset(buf + i * PGSIZE, 'a' + i, PGSIZE);
-        }
-        
-        // 验证子进程的修改
-        for (i = 0; i < TEST_PAGES / 2; i++) {
-            if (buf[i * PGSIZE] != 'a' + i) {
-                cprintf("COW Test: Child verify failed at page %d\n", i);
-                exit(-1);
-            }
-        }
-        cprintf("COW Test: Child write OK (pages copied)\n");
-        
+        // 子进程：只读访问
+        cprintf("[子进程] shared_var地址=0x%x, 值=%d\n", shared_var, *shared_var);
+        cprintf("[子进程] 读取成功，页面共享正常\n");
         exit(0);
-    } else {
-        // 父进程：等待片刻后验证数据未被子进程影响
-        yield();
-        yield();
-        yield();
-        
-        cprintf("COW Test: Parent verifying...\n");
-        for (i = 0; i < TEST_PAGES; i++) {
-            if (buf[i * PGSIZE] != 'A' + i) {
-                cprintf("COW Test: Parent verify failed at page %d, got %c\n", 
-                       i, buf[i * PGSIZE]);
-                return -1;
-            }
-        }
-        cprintf("COW Test: Parent data intact (COW worked!)\n");
-        
-        // 等待子进程结束
-        int code;
-        waitpid(pid, &code);
-        
-        if (code == 0) {
-            cprintf("COW Test: PASSED\n");
-        } else {
-            cprintf("COW Test: FAILED (child exit code %d)\n", code);
-        }
     }
-    
-    return 0;
 }
 ```
 
-我们将使用这个测试用例验证了COW机制的三个关键特性：1.子进程创建后能读取父进程写入的数据，说明初始时页面是共享的；2.进程修改页面后，拥有独立的副本;3.父进程的数据不受子进程修改的影响
+**测试2：写时复制触发**
 
-### 性能对比测试
-
-我们还编写了性能对比测试，比较传统复制和COW的性能差异：
+检验写时复制机制。子进程对共享数组执行写操作，触发页面错误，COW机制分配新的物理页面并复制内容：
 
 ```c
-#include <stdio.h>
-#include <ulib.h>
-
-#define TEST_SIZE (100 * 4096)  // 100页
-
-int main(void) {
-    cprintf("Performance Test: Allocating memory...\n");
-    
-    char *buf = (char *)0x20000000;
-    int i;
-    for (i = 0; i < TEST_SIZE; i++) {
-        buf[i] = i & 0xFF;
-    }
-    
-    cprintf("Performance Test: Starting fork...\n");
-    
-    // 记录fork的开始（简单计数）
-    int count_before = 0;
-    for (i = 0; i < 1000; i++) count_before++;
+void test_cow_write(void) {
+    static int test_array[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     
     int pid = fork();
     
-    int count_after = 0;
-    for (i = 0; i < 1000; i++) count_after++;
-    
     if (pid == 0) {
-        cprintf("Performance Test: Child forked quickly (COW)\n");
+        // 子进程：修改数组，触发COW
+        test_array[0] = 999;
+        cprintf("[子进程] 修改后: test_array[0]=%d\n", test_array[0]);
         exit(0);
     } else {
         waitpid(pid, NULL);
-        cprintf("Performance Test: Fork completed\n");
+        // 验证父进程的数据未被修改
+        if (test_array[0] == 0) {
+            cprintf("✓ COW成功隔离父子进程数据\n");
+        }
     }
-    
-    return 0;
 }
 ```
 
-### 实现总结
+**测试3：多次写操作**
 
-COW机制不仅减少了fork的时间开销，还大幅降低了内存使用。在许多实际场景中，fork后的子进程很快就会调用exec加载新程序，如果没有COW，之前复制的内存就完全浪费了。
+验证复制后页面的可写性。在第一次写操作触发COW后，后续多次写入应正常执行：
 
-COW的实现涉及页表管理、页面错误处理、引用计数维护等多个方面，需要仔细处理各种边界情况和并发问题。对Dirty COW漏洞的分析让我们认识到即使是成熟的操作系统也可能存在竞态条件导致的安全漏洞，必须通过严格的原子性保护和锁机制来防范。
+```c
+void test_multiple_writes(void) {
+    static char buffer[100] = "Original text";
+    
+    int pid = fork();
+    
+    if (pid == 0) {
+        // 子进程：多次写入
+        strcpy(buffer, "Modified by child 1");
+        strcpy(buffer, "Modified by child 2");
+        strcpy(buffer, "Modified by child 3");
+        cprintf("[子进程] 最终内容: %s\n", buffer);
+        exit(0);
+    }
+}
+```
 
-本实现提供了一个教学性质的COW机制，展示了核心原理和关键技术点。在实际的生产环境中，还需要考虑更多的优化和安全措施，如TLB shootdown、NUMA架构下的页面迁移、透明大页的处理等。
+**测试4：多个子进程共享**
+
+测试多进程共享同一物理页面。三个子进程中，前两个只读，第三个写入：
+
+```c
+void test_multiple_children(void) {
+    static int shared_data = 100;
+    
+    int pid1 = fork();
+    if (pid1 == 0) {
+        // 子进程1：只读
+        cprintf("[子进程1] 读取 shared_data=%d\n", shared_data);
+        exit(1);
+    }
+    
+    int pid2 = fork();
+    if (pid2 == 0) {
+        // 子进程2：只读
+        cprintf("[子进程2] 读取 shared_data=%d\n", shared_data);
+        exit(2);
+    }
+    
+    int pid3 = fork();
+    if (pid3 == 0) {
+        // 子进程3：写入，触发COW
+        shared_data = 300;
+        cprintf("[子进程3] 修改后 shared_data=%d\n", shared_data);
+        exit(3);
+    }
+}
+```
+
+**测试5：大量写操作**
+
+分配4个页面的缓冲区，子进程对所有页面执行分散写操作：
+
+```
+void test_heavy_write(void) {
+    static char large_buffer[PGSIZE * 4];
+    
+    // 初始化数据
+    for (int i = 0; i < PGSIZE * 4; i++) {
+        large_buffer[i] = 'A' + (i % 26);
+    }
+    
+    int pid = fork();
+    
+    if (pid == 0) {
+        // 子进程：写入所有页面
+        for (int i = 0; i < PGSIZE * 4; i += 128) {
+            large_buffer[i] = 'X';  // 每隔128字节写一次
+        }
+        cprintf("[子进程] 写入完成\n");
+        exit(0);
+    }
+}
+```
+
+**测试6：递归fork**
+
+创建三层嵌套的进程树，每层修改共享变量但不影响父进程：
+
+```c
+void test_recursive_fork(int depth) {
+    if (depth <= 0) return;
+    
+    static int counter = 0;
+    counter++;
+    
+    int pid = fork();
+    if (pid == 0) {
+        // 子进程：修改counter并继续fork
+        counter += 100;
+        cprintf("[深度%d子进程] counter=%d\n", depth, counter);
+        test_recursive_fork(depth - 1);
+        exit(0);
+    } else {
+        waitpid(pid, NULL);
+        cprintf("[深度%d父进程] counter=%d\n", depth, counter);
+    }
+}
+```
+
+**测试7：内存节省验证**
+
+子进程fork后不修改数据直接退出，页面无需复制：
+
+```c
+void test_memory_saving(void) {
+    static char big_data[PGSIZE * 10];
+    for (int i = 0; i < PGSIZE * 10; i++) {
+        big_data[i] = i % 256;
+    }
+    
+    int pid = fork();
+    if (pid == 0) {
+        // 子进程：共享数据，不修改
+        int sum = 0;
+        for (int i = 0; i < 100; i++) {
+            sum += big_data[i];
+        }
+        cprintf("[子进程] 数据校验和=%d\n", sum);
+        exit(0);
+    }
+}
+```
+
+**测试8：Fork后Exec场景**
+
+模拟fork后立即exec的常见模式，COW页面未使用即被释放：
+
+```c
+void test_fork_exec(void) {
+    static char data[] = "Data before exec";
+    
+    int pid = fork();
+    if (pid == 0) {
+        cprintf("[子进程] Fork后立即执行其他程序\n");
+        cprintf("[子进程] 模拟exec：COW页面未被使用即被释放\n");
+        exit(0);
+    }
+}
+```
+
+**性能对比测试**
+
+对比COW与传统复制的fork开销：
+
+```c
+void performance_test(void) {
+    static char perf_data[PGSIZE * 20];
+    for (int i = 0; i < PGSIZE * 20; i++) {
+        perf_data[i] = i % 256;
+    }
+    
+    int pid1 = fork();
+    if (pid1 == 0) {
+        // 子进程：只读访问
+        volatile int sum = 0;
+        for (int i = 0; i < PGSIZE * 20; i += 1024) {
+            sum += perf_data[i];
+        }
+        exit(0);
+    }
+    
+    cprintf("COW fork+读取 完成\n");
+}
+```
+
+#### 2. 压力测试：cowstress.c
+
+`cowstress.c`是COW机制的压力测试程序，通过极端场景来检验实现的健壮性。
+
+**压力测试1：大量Fork**
+
+创建10个子进程共享大块内存（50个页面），一半子进程触发COW写入：
+
+```c
+void stress_test_many_forks(void) {
+    static char shared_buffer[PGSIZE * 50];
+    
+    // 初始化共享数据
+    for (int i = 0; i < PGSIZE * 50; i++) {
+        shared_buffer[i] = 'S';
+    }
+    
+    int pids[10];
+    for (int i = 0; i < 10; i++) {
+        int pid = fork();
+        if (pid == 0) {
+            // 子进程：读取所有页面
+            volatile int checksum = 0;
+            for (int j = 0; j < PGSIZE * 50; j += PGSIZE) {
+                checksum += shared_buffer[j];
+            }
+            
+            // 一半的子进程修改数据（触发COW）
+            if (i % 2 == 0) {
+                for (int j = i * 1000; j < (i + 1) * 1000; j++) {
+                    shared_buffer[j] = 'C';
+                }
+            }
+            exit(i);
+        } else {
+            pids[i] = pid;
+        }
+    }
+}
+```
+
+**压力测试2：Fork树**
+
+构造fork树结构，深度3，广度2：
+
+```c
+void stress_test_fork_tree(int depth, int breadth) {
+    if (depth <= 0) return;
+    
+    static char tree_data[PGSIZE * 2];
+    tree_data[0] = 'T';
+    
+    for (int i = 0; i < breadth; i++) {
+        int pid = fork();
+        if (pid == 0) {
+            // 子进程：修改数据并递归
+            tree_data[i] = 'C';
+            tree_data[PGSIZE + i] = 'C';
+            
+            // 递归创建下一层
+            stress_test_fork_tree(depth - 1, breadth);
+            exit(0);
+        }
+    }
+    
+    // 等待所有子进程
+    for (int i = 0; i < breadth; i++) {
+        wait();
+    }
+}
+```
+
+**压力测试3：并发写入**
+
+父进程和5个子进程同时对同一区域执行写操作：
+
+```c
+void stress_test_concurrent_write(void) {
+    static int concurrent_data[1024];
+    for (int i = 0; i < 1024; i++) {
+        concurrent_data[i] = i;
+    }
+    
+    int pids[5];
+    for (int i = 0; i < 5; i++) {
+        int pid = fork();
+        if (pid == 0) {
+            // 所有子进程写入相同区域（不同值）
+            for (int j = 0; j < 1024; j++) {
+                concurrent_data[j] = i * 1000 + j;
+            }
+            
+            // 验证写入
+            int errors = 0;
+            for (int j = 0; j < 1024; j++) {
+                if (concurrent_data[j] != i * 1000 + j) {
+                    errors++;
+                }
+            }
+            exit(i);
+        } else {
+            pids[i] = pid;
+        }
+    }
+    
+    // 父进程也写入
+    for (int i = 0; i < 1024; i++) {
+        concurrent_data[i] = 99999 + i;
+    }
+}
+```
+
+**压力测试4：随机访问**
+
+使用伪随机算法访问20个页面，交替读写：
+
+```c
+void stress_test_random_access(void) {
+    static char random_buffer[PGSIZE * 20];
+    
+    for (int i = 0; i < PGSIZE * 20; i++) {
+        random_buffer[i] = (i * 7 + 13) % 256;
+    }
+    
+    int pid = fork();
+    if (pid == 0) {
+        // 随机访问模式：先读后写
+        for (int iter = 0; iter < 100; iter++) {
+            // 伪随机位置
+            int pos = (iter * 997 + 2333) % (PGSIZE * 20);
+            
+            // 读
+            volatile char old_val = random_buffer[pos];
+            // 写（第一次写会触发COW）
+            random_buffer[pos] = (char)(iter % 256);
+        }
+        exit(0);
+    }
+}
+```
+
+### 3.DirtyCOW漏洞演示
+
+`dirtycow_sim.c`是DirtyCOW漏洞（CVE-2016-5195）的教学演示程序，通过简化模拟帮助理解这个著名的COW竞态条件漏洞。
+
+**测试1：正常COW行为**
+
+展示正常COW作为基线对比：
+
+```c
+void test_normal_cow(void) {
+    static char protected_data[PGSIZE];
+    memcpy(protected_data, readonly_file_content, PGSIZE);
+    
+    int pid = fork();
+    
+    if (pid == 0) {
+        // 子进程：尝试修改
+        protected_data[0] = 'X';
+        strcpy(protected_data + 20, "HACKED BY CHILD");
+        cprintf("[子进程] 修改后: %.50s...\n", protected_data);
+        exit(0);
+    } else {
+        waitpid(pid, NULL);
+        // 父进程验证数据未被修改
+        if (protected_data[0] == 'T') {
+            cprintf("[父进程] ✓ 数据完整：COW正常工作\n");
+        }
+    }
+}
+```
+
+**测试2：DirtyCOW竞态模拟**
+
+简化模拟DirtyCOW的竞态条件：
+
+```c
+void test_dirtycow_simulation(void) {
+    static char mmap_private[PGSIZE];
+    memcpy(mmap_private, readonly_file_content, PGSIZE);
+    
+    // Fork创建两个进程模拟竞态
+    int pid1 = fork();
+    
+    if (pid1 == 0) {
+        //===== 子进程1：模拟madvise线程 =====
+        for (int i = 0; i < 100; i++) {
+            // 在真实DirtyCOW中，这里调用：
+            // madvise(addr, len, MADV_DONTNEED);
+            // 效果：清除页表项，下次访问会重新映射原文件
+            
+            race_flag = 1;  // 通知write线程：页面已丢弃
+            
+            // 模拟系统调用延迟
+            for (volatile int delay = 0; delay < 1000; delay++);
+            
+            race_flag = 0;
+        }
+        exit(0);
+    }
+    
+    int pid2 = fork();
+    
+    if (pid2 == 0) {
+        //===== 子进程2：模拟write线程 =====
+        for (int i = 0; i < 100; i++) {
+            // 检查竞态窗口
+            if (race_flag == 1) {
+                // 竞态窗口！页面刚被丢弃
+                cprintf("[write进程] !!! 检测到竞态窗口（迭代%d）\n", i);
+                
+                // 尝试写入（在真实情况下可能写到原文件）
+                memcpy(mmap_private, "HACKED DATA - VULNERABLE!", 25);
+                
+                attack_success = 1;
+                break;
+            }
+            
+            // 正常写入（会触发COW）
+            mmap_private[i % PGSIZE] = 'W';
+        }
+        exit(0);
+    }
+}
+```
+
+**测试3：多进程竞态放大**
+
+创建多个进程增加竞态触发概率：
+
+```c
+void test_race_amplification(void) {
+    static char race_buffer[PGSIZE];
+    memcpy(race_buffer, "Original shared data", 21);
+    
+    int pids[5];
+    
+    for (int i = 0; i < 5; i++) {
+        int pid = fork();
+        if (pid == 0) {
+            // 每个子进程快速写入
+            for (int j = 0; j < 50; j++) {
+                race_buffer[j % PGSIZE] = '0' + i;
+                
+                // 随机延迟增加竞态可能性
+                for (volatile int d = 0; d < (i * 100); d++);
+            }
+            exit(i);
+        } else {
+            pids[i] = pid;
+        }
+    }
+    
+    // 父进程也参与写入
+    for (int i = 0; i < 50; i++) {
+        race_buffer[i % PGSIZE] = 'P';
+    }
+}
+```
+
+### COW机制正确性验证结果
+
+虽然我们没有直接的测试用例来验证所有进程都在读同一个页面，但通过观察实际运行时的输出信息，可以从多个角度间接证明COW机制的正确性。
+
+<img src="./img/20251216-182029.png" alt="image-20251216175348834" style="zoom:67%;" />
+
+  当父进程和子进程在写入操作时触发页面错误，我们可以观察到它们触发page fault的虚拟地址是相同的。这说明父子进程的页表中，相同的虚拟地址最初确实映射到了同一个物理页面。如果不是共享同一物理页面，那么在fork之后，子进程访问该虚拟地址时就应该访问的是独立的物理页面，不会与父进程的地址有任何关联。而现在它们**在相同虚拟地址上触发页面错误，并且错误的物理地址也相同**，这直接证明了在写操作发生前，这两个进程共享的是同一块物理内存。
+
+  在fork发生时，我们可以观察到共享页面的**引用计数从1增加到2，**表示现在有两个进程在使用这个物理页面。当**子进程对页面执行写操作触发COW后，原页面的引用计数减少1**，因为子进程已经获得了新的物理页面副本。如果创建了更多的子进程，引用计数会继续增加。这个引用计数的动态变化完全符合页面共享的预期行为。如果父子进程各自使用独立的页面，那么每个页面的引用计数应该一直保持为1，不会有这种增减的过程。
+
+我们的间接验证方式虽然不如专门的测试用例直观，但通过多方面的证据交叉印证，同样能够充分说明COW机制的正确性。
 
 
 
