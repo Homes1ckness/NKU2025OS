@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <pmm.h>
 #include <assert.h>
+#include <clock.h>
 
 static int
 sys_exit(uint64_t arg[]) {
@@ -63,7 +64,14 @@ sys_pgdir(uint64_t arg[]) {
     //print_pgdir();
     return 0;
 }
-
+static int sys_gettime(uint64_t arg[]){
+    return (int)ticks*10;
+}
+static int sys_lab6_set_priority(uint64_t arg[]){
+    uint64_t priority = (uint64_t)arg[0];
+    lab6_set_priority(priority);
+    return 0;
+}
 static int (*syscalls[])(uint64_t arg[]) = {
     [SYS_exit]              sys_exit,
     [SYS_fork]              sys_fork,
@@ -74,6 +82,8 @@ static int (*syscalls[])(uint64_t arg[]) = {
     [SYS_getpid]            sys_getpid,
     [SYS_putc]              sys_putc,
     [SYS_pgdir]             sys_pgdir,
+    [SYS_gettime]           sys_gettime,
+    [SYS_lab6_set_priority]  sys_lab6_set_priority,
 };
 
 #define NUM_SYSCALLS        ((sizeof(syscalls)) / (sizeof(syscalls[0])))

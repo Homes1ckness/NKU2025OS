@@ -32,7 +32,7 @@ DTB init completed
 Special kernel symbols:
   entry  0xc020004a (virtual)
   etext  0xc0205cf4 (virtual)
-  edata  0xc02d607c (virtual)
+  edata  0xc02d6078 (virtual)
   end    0xc02da524 (virtual)
 Kernel executable memory footprint: 874KB
 memory management: default_pmm_manager
@@ -46,23 +46,12 @@ use SLOB allocator
 kmalloc_init() succeeded!
 check_vma_struct() succeeded!
 check_vmm() succeeded.
-[FORK] Using COW to copy memory
+[FORK] Using traditional copy to duplicate memory
 ++ setup timer interrupts
-[FORK] Using COW to copy memory
+[FORK] Using traditional copy to duplicate memory
 kernel_execve: pid = 2, name = "badarg".
 Breakpoint
-[FORK] Using COW to copy memory
-Store/AMO page fault at 0x7fffff5c
-[COW] Page fault at addr 0x7fffff5c, error_code=0xf
-[COW] Valid COW page detected, PTE=0x201395db
-[COW] Physical page ref_count = 3
-[COW] Multiple references (3), performing copy
-[COW] New page allocated
-[COW] Page content copied
-[COW] New mapping established, PTE=0x2013c81f
-[COW] Old page ref_count decreased to 2
-[COW] New page ref_count = 1
-COW page fault handled successfully
+[FORK] Using traditional copy to duplicate memory
 fork ok.
 badarg pass.
 all user-mode processes have quit.

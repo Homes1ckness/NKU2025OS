@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.17)
-project(lab5)
+project(lab6 C)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_C_STANDARD 11)
 
 include_directories(.)
-include_directories(boot)
 include_directories(kern)
 include_directories(kern/debug)
 include_directories(kern/driver)
 include_directories(kern/fs)
+include_directories(kern/init)
+include_directories(kern/libs)
 include_directories(kern/mm)
 include_directories(kern/process)
 include_directories(kern/schedule)
@@ -20,10 +21,7 @@ include_directories(tools)
 include_directories(user)
 include_directories(user/libs)
 
-add_executable(lab5
-        boot/asm.h
-        boot/bootasm.S
-        boot/bootmain.c
+add_executable(lab6
         kern/debug/assert.h
         kern/debug/kdebug.c
         kern/debug/kdebug.h
@@ -64,6 +62,8 @@ add_executable(lab5
         kern/mm/vmm.h
         kern/process/proc.c
         kern/process/proc.h
+        kern/schedule/default_sched.h
+        kern/schedule/default_sched_stride.c
         kern/schedule/sched.c
         kern/schedule/sched.h
         kern/sync/sync.h
@@ -81,6 +81,7 @@ add_executable(lab5
         libs/rand.c
         libs/riscv.h
         libs/sbi.h
+        libs/skew_heap.h
         libs/stdarg.h
         libs/stdio.h
         libs/stdlib.h
@@ -105,7 +106,9 @@ add_executable(lab5
         user/forktest.c
         user/forktree.c
         user/hello.c
+        user/matrix.c
         user/pgdir.c
+        user/priority.c
         user/softint.c
         user/spin.c
         user/testbss.c
