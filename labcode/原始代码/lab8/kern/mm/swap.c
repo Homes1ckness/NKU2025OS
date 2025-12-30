@@ -200,7 +200,7 @@ check_swap(void)
 
      check_mm_struct = mm;
 
-     pde_t *pgdir = mm->pgdir = boot_pgdir;
+     pde_t *pgdir = mm->pgdir = boot_pgdir_va;
      assert(pgdir[0] == 0);
 
      struct vma_struct *vma = vma_create(BEING_CHECK_VALID_VADDR, CHECK_VALID_VADDR, VM_WRITE | VM_READ);
@@ -271,7 +271,7 @@ check_swap(void)
      mm_destroy(mm);
      check_mm_struct = NULL;
 
-     pde_t *pd1=pgdir,*pd0=page2kva(pde2page(boot_pgdir[0]));
+     pde_t *pd1=pgdir,*pd0=page2kva(pde2page(boot_pgdir_va[0]));
      free_page(pde2page(pd0[0]));
      free_page(pde2page(pd1[0]));
      pgdir[0] = 0;

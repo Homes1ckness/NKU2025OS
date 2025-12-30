@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(lab7 C)
+project(lab8 C)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -8,6 +8,10 @@ include_directories(kern)
 include_directories(kern/debug)
 include_directories(kern/driver)
 include_directories(kern/fs)
+include_directories(kern/fs/devs)
+include_directories(kern/fs/sfs)
+include_directories(kern/fs/swap)
+include_directories(kern/fs/vfs)
 include_directories(kern/init)
 include_directories(kern/libs)
 include_directories(kern/mm)
@@ -21,7 +25,7 @@ include_directories(tools)
 include_directories(user)
 include_directories(user/libs)
 
-add_executable(lab7
+add_executable(lab8
         kern/debug/assert.h
         kern/debug/kdebug.c
         kern/debug/kdebug.h
@@ -40,12 +44,43 @@ add_executable(lab7
         kern/driver/kbdreg.h
         kern/driver/picirq.c
         kern/driver/picirq.h
+        kern/driver/ramdisk.c
+        kern/driver/ramdisk.h
+        kern/fs/devs/dev.c
+        kern/fs/devs/dev.h
+        kern/fs/devs/dev_disk0.c
+        kern/fs/devs/dev_stdin.c
+        kern/fs/devs/dev_stdout.c
+        kern/fs/sfs/bitmap.c
+        kern/fs/sfs/bitmap.h
+        kern/fs/sfs/sfs.c
+        kern/fs/sfs/sfs.h
+        kern/fs/sfs/sfs_fs.c
+        kern/fs/sfs/sfs_inode.c
+        kern/fs/sfs/sfs_io.c
+        kern/fs/sfs/sfs_lock.c
+        kern/fs/swap/swapfs.c
+        kern/fs/swap/swapfs.h
+        kern/fs/vfs/inode.c
+        kern/fs/vfs/inode.h
+        kern/fs/vfs/vfs.c
+        kern/fs/vfs/vfs.h
+        kern/fs/vfs/vfsdev.c
+        kern/fs/vfs/vfsfile.c
+        kern/fs/vfs/vfslookup.c
+        kern/fs/vfs/vfspath.c
+        kern/fs/file.c
+        kern/fs/file.h
+        kern/fs/fs.c
         kern/fs/fs.h
-        kern/fs/swapfs.c
-        kern/fs/swapfs.h
+        kern/fs/iobuf.c
+        kern/fs/iobuf.h
+        kern/fs/sysfile.c
+        kern/fs/sysfile.h
         kern/init/init.c
         kern/libs/readline.c
         kern/libs/stdio.c
+        kern/libs/string.c
         kern/mm/default_pmm.c
         kern/mm/default_pmm.h
         kern/mm/kmalloc.c
@@ -80,6 +115,7 @@ add_executable(lab7
         kern/trap/trap.h
         libs/atomic.h
         libs/defs.h
+        libs/dirent.h
         libs/elf.h
         libs/error.h
         libs/hash.c
@@ -89,14 +125,21 @@ add_executable(lab7
         libs/riscv.h
         libs/sbi.h
         libs/skew_heap.h
+        libs/stat.h
         libs/stdarg.h
         libs/stdio.h
         libs/stdlib.h
         libs/string.c
         libs/string.h
         libs/unistd.h
+        tools/mksfs.c
         tools/sign.c
         tools/vector.c
+        user/libs/dir.c
+        user/libs/dir.h
+        user/libs/file.c
+        user/libs/file.h
+        user/libs/lock.h
         user/libs/panic.c
         user/libs/stdio.c
         user/libs/syscall.c
@@ -116,6 +159,7 @@ add_executable(lab7
         user/matrix.c
         user/pgdir.c
         user/priority.c
+        user/sh.c
         user/sleep.c
         user/sleepkill.c
         user/softint.c

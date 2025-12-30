@@ -2,11 +2,14 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <syscall.h>
+#include <stat.h>
+#include <dirent.h>
+
 
 #define MAX_ARGS            5
 
 static inline int
-syscall(int64_t num, ...) {
+syscall(uint64_t num, ...) {
     va_list ap;
     va_start(ap, num);
     uint64_t a[MAX_ARGS];
@@ -48,7 +51,7 @@ sys_fork(void) {
 }
 
 int
-sys_wait(int64_t pid, int *store) {
+sys_wait(int64_t pid, int64_t *store) {
     return syscall(SYS_wait, pid, store);
 }
 
@@ -77,11 +80,6 @@ sys_pgdir(void) {
     return syscall(SYS_pgdir);
 }
 
-int
-sys_gettime(void) {
-    return syscall(SYS_gettime);
-}
-
 void
 sys_lab6_set_priority(uint64_t priority)
 {
@@ -89,6 +87,66 @@ sys_lab6_set_priority(uint64_t priority)
 }
 
 int
-sys_sleep(uint64_t time) {
+sys_sleep(int64_t time) {
     return syscall(SYS_sleep, time);
+}
+
+int
+sys_gettime(void) {
+    return syscall(SYS_gettime);
+}
+
+int
+sys_exec(const char *name, int64_t argc, const char **argv) {
+    return syscall(SYS_exec, name, argc, argv);
+}
+
+int
+sys_open(const char *path, uint64_t open_flags) {
+    return syscall(SYS_open, path, open_flags);
+}
+
+int
+sys_close(int64_t fd) {
+    return syscall(SYS_close, fd);
+}
+
+int
+sys_read(int64_t fd, void *base, size_t len) {
+    return syscall(SYS_read, fd, base, len);
+}
+
+int
+sys_write(int64_t fd, void *base, size_t len) {
+    return syscall(SYS_write, fd, base, len);
+}
+
+int
+sys_seek(int64_t fd, off_t pos, int64_t whence) {
+    return syscall(SYS_seek, fd, pos, whence);
+}
+
+int
+sys_fstat(int64_t fd, struct stat *stat) {
+    return syscall(SYS_fstat, fd, stat);
+}
+
+int
+sys_fsync(int64_t fd) {
+    return syscall(SYS_fsync, fd);
+}
+
+int
+sys_getcwd(char *buffer, size_t len) {
+    return syscall(SYS_getcwd, buffer, len);
+}
+
+int
+sys_getdirentry(int64_t fd, struct dirent *dirent) {
+    return syscall(SYS_getdirentry, fd, dirent);
+}
+
+int
+sys_dup(int64_t fd1, int64_t fd2) {
+    return syscall(SYS_dup, fd1, fd2);
 }
