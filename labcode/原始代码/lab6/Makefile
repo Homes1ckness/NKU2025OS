@@ -1,4 +1,4 @@
-PROJ	:= lab5
+PROJ	:= lab6
 EMPTY	:=
 SPACE	:= $(EMPTY) $(EMPTY)
 SLASH	:= /

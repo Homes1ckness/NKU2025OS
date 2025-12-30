@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-volatile int enable_cow = 1;
+volatile int enable_cow = 0;
 
 /* ------------- process/thread mechanism design&implementation -------------
 (an simplified Linux process/thread mechanism )
