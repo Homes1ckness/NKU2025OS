@@ -61,16 +61,16 @@ set priority to 5
 End of Test.
 100 ticks
 End of Test.
-child pid 3, acc 876000, time 2010
-child pid 4, acc 864000, time 2010
-child pid 5, acc 868000, time 2010
-child pid 6, acc 840000, time 2010
-child pid 7, acc 864000, time 2010
-main: pid 0, acc 876000, time 2010
-main: pid 4, acc 864000, time 2010
-main: pid 5, acc 868000, time 2010
-main: pid 6, acc 840000, time 2010
-main: pid 7, acc 864000, time 2010
+child pid 3, acc 768000, time 2010
+child pid 4, acc 748000, time 2010
+child pid 5, acc 744000, time 2010
+child pid 6, acc 748000, time 2010
+child pid 7, acc 748000, time 2010
+main: pid 0, acc 768000, time 2010
+main: pid 4, acc 748000, time 2010
+main: pid 5, acc 744000, time 2010
+main: pid 6, acc 748000, time 2010
+main: pid 7, acc 748000, time 2010
 main: wait pids over
 sched result: 1 1 1 1 1
 all user-mode processes have quit.

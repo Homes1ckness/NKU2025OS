@@ -35,7 +35,12 @@ bitmap_create(uint32_t nbits) {
     bitmap->nbits = nbits, bitmap->nwords = nwords;
     bitmap->map = memset(map, 0xFF, sizeof(WORD_TYPE) * nwords);
 
-    /* mark any leftover bits at the end in use(0) */
+    /* mark any leftover bits at the end in use(0) 处理多余的位
+        nwords = 4
+        实际分配: 4 × 32 = 128位
+        有效位: 100位
+        多余位: 128 - 100 = 28位
+    */
     if (nbits != nwords * WORD_BITS) {
         uint32_t ix = nwords - 1, overbits = nbits - ix * WORD_BITS;
 
@@ -49,7 +54,7 @@ bitmap_create(uint32_t nbits) {
     return bitmap;
 }
 
-// bitmap_alloc - locate a cleared bit, set it, and return its index.
+// bitmap_alloc - locate a cleared bit, set it, and return its index.分配一个空闲位
 int
 bitmap_alloc(struct bitmap *bitmap, uint32_t *index_store) {
     WORD_TYPE *map = bitmap->map;
@@ -70,7 +75,7 @@ bitmap_alloc(struct bitmap *bitmap, uint32_t *index_store) {
     return -E_NO_MEM;
 }
 
-// bitmap_translate - according index, get the related word and mask
+// bitmap_translate - according index, get the related word and mask 位置转换将全局位索引转换为字指针和掩码
 static void
 bitmap_translate(struct bitmap *bitmap, uint32_t index, WORD_TYPE **word, WORD_TYPE *mask) {
     assert(index < bitmap->nbits);
@@ -79,7 +84,7 @@ bitmap_translate(struct bitmap *bitmap, uint32_t index, WORD_TYPE **word, WORD_T
     *mask = (1 << offset);
 }
 
-// bitmap_test - according index, get the related value (0 OR 1) in the bitmap
+// bitmap_test - according index, get the related value (0 OR 1) in the bitmap检查指定位是否为1（空闲）
 bool
 bitmap_test(struct bitmap *bitmap, uint32_t index) {
     WORD_TYPE *word, mask;

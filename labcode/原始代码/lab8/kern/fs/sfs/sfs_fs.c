@@ -14,11 +14,37 @@
 #include <assert.h>
 #include <proc.h>
 /*
- * sfs_sync - sync sfs's superblock and freemap in memroy into disk
+ * sfs_sync - sync sfs's superblock and freemap in memroy into disk将内存中的文件同步到磁盘
+ 
+    场景: 用户调用 sync() 系统调用
+
+1. 用户态: sync()
+   ↓
+2. 系统调用: sys_sync()
+   ↓
+3. VFS层: fsop_sync(fs)
+   ↓
+4. SFS层: sfs_sync(fs)
+   ↓
+5. 遍历inode链表:
+   inode1 (dirty) → vop_fsync() → 写入磁盘
+   inode2 (dirty) → vop_fsync() → 写入磁盘
+   inode3 (clean) → vop_fsync() → 跳过
+   ↓
+6. 检查超级块脏标志:
+   super_dirty = 1
+   ↓
+7. sfs_sync_super():
+   写入块0 (超级块)
+   ↓
+8. sfs_sync_freemap():
+   写入块1~N (位图数据)
+   ↓
+9. 完成，返回0
  */
 static int
 sfs_sync(struct fs *fs) {
-    struct sfs_fs *sfs = fsop_info(fs, sfs);
+    struct sfs_fs *sfs = fsop_info(fs, sfs); //从通用FS结构体中获取特定的sfs文件系统信息
     lock_sfs_fs(sfs);
     {
         list_entry_t *list = &(sfs->inode_list), *le = list;
@@ -45,7 +71,17 @@ sfs_sync(struct fs *fs) {
 }
 
 /*
- * sfs_get_root - get the root directory inode  from disk (SFS_BLKN_ROOT,1)
+ * sfs_get_root - get the root directory inode  from disk (SFS_BLKN_ROOT,1)加载文件系统的根目录inode到内存
+
+用户: open("/home/file.txt")
+  ↓
+VFS: 从根目录开始解析
+  ↓
+获取根inode: sfs_get_root()
+  ↓
+在根目录查找 "home"
+  ↓
+在home目录查找 "file.txt"
  */
 static struct inode *
 sfs_get_root(struct fs *fs) {
@@ -165,6 +201,7 @@ sfs_do_mount(struct device *dev, struct fs **fs_store) {
 
     int ret = -E_NO_MEM;
 
+    // 分配IO缓冲区
     void *sfs_buffer;
     if ((sfs->sfs_buffer = sfs_buffer = kmalloc(SFS_BLKSIZE)) == NULL) {
         goto failed_cleanup_fs;

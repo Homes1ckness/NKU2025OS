@@ -1059,7 +1059,7 @@ void cpu_idle(void)
     }
 }
 
-// FOR LAB6, set the process's priority (bigger value will get more CPU time)
+// FOR LAB6, 用于设置进程优先级（值越大将获得更多CPU时间）
 void lab6_set_priority(uint32_t priority)
 {
     cprintf("set priority to %d\n", priority);

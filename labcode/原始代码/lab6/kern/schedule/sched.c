@@ -9,8 +9,10 @@
 // the list of timer
 static list_entry_t timer_list;
 
+// 指向当前生效的调度策略实现类
 static struct sched_class *sched_class;
 
+// 指向全局的就绪进程队列
 static struct run_queue *rq;
 
 static inline void
@@ -46,12 +48,15 @@ void sched_class_proc_tick(struct proc_struct *proc)
     }
 }
 
+// 运行队列的实体
 static struct run_queue __rq;
 
 void sched_init(void)
 {
+    // 初始化定时器链表
     list_init(&timer_list);
 
+    // 绑定调度策略
     sched_class = &default_sched_class;
 
     rq = &__rq;
